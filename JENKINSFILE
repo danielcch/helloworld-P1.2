@@ -6,7 +6,7 @@ pipeline {
             steps {
                 // Obtener código del repo
                 checkout scm
-                bat 'dir'
+                sh 'dir'
                 echo WORKSPACE
             }
         }
@@ -25,7 +25,7 @@ pipeline {
                 stage('Unit') {
                             steps {
                                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                                    bat '''
+                                    sh '''
                                         set PYTHONPATH=.
                                         pytest --junitxml=result-unit.xml test/unit
                                     '''
@@ -37,7 +37,7 @@ pipeline {
                 stage('Rest') {
                     steps {
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                            bat '''
+                            sh '''
                                 set FLASK_APP=app/api.py
                                 start flask run
                                 start java -jar /tools/wiremock/wiremock-standalone-2.27.2.jar --port 9090 --root-dir test/wiremock
