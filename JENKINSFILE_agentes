@@ -96,7 +96,7 @@ pipeline {
                         kill $FLASK_PID || true
                     '''
                     perfReport sourceDataFiles: 'flask.jtl'
-
+                }
             }
         }
     }
