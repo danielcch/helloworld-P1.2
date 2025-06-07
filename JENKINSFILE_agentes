@@ -130,7 +130,7 @@ pipeline {
                 recordIssues tools: [flake8(name: 'Flake8', pattern: 'flake8.out')], 
                 qualityGates: [[threshold:10, type: 'TOTAL', unstable: true], 
                 [threshold: 11, type: 'TOTAL', unstable: false]]
-                }
+                
 
                 recordIssues tools: [pyLint(name: 'Bandit', pattern: 'bandit.out')], 
                 qualityGates: [[threshold:1, type: 'TOTAL', unstable: true], 
@@ -138,6 +138,7 @@ pipeline {
                 
                 perfReport sourceDataFiles: 'flask.jtl'
             }
+        
         }
     }
 }
