@@ -3,13 +3,12 @@ pipeline {
 
     options { skipDefaultCheckout() }
 
-     stages {
+    stages {
         stage('Get Code') {
             steps {
-                // Obtener código del repo
-                git 'https://github.com/anieto-unir/helloworld.git'
-	            echo WORKSPACE
-                bat 'dir'
+                git 'https://github.com/danielcch/helloworld-P1.2.git'
+                echo WORKSPACE
+                sh 'ls -la'
                 stash name:'code', includes:'**'
             }
         }
@@ -19,60 +18,29 @@ pipeline {
               echo 'Eyyy, esto es Python. No hay que compilar nada!!!'
            }
         }
-        
-        stage('Tests')
-        {
-            parallel
-            {
-                stage('Unit') {
-                    agent {label 'agent1'}
-                    steps {
-                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                            unstash name:'code'
-                            sh '''
-                                ls -la
-                                export PYTHONPATH=${WORKSPACE}
-                                /home/agent1/.local/bin/pytest --junitxml=result-unit.xml test/unit
-                            '''
-                            stash name:'unit-res', includes:'result-unit.xml'
-                       }
-                    }
-                }   
-                
-                
-                stage('Rest') {
-                    agent {label 'agent2'}
-                    steps {
-                      catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                        unstash name:'code'
-                        sh '''
-                            export FLASK_APP=app/api.py                          
-                            /home/agent2/.local/bin/flask run &
 
-                            sleep 4
-
-                            java -jar /home/agent2/wiremock/wiremock-standalone-3.3.1.jar --port 9090 --root-dir /home/agent2/wiremock &
-                            export PYTHONPATH=${WORKSPACE}
-                            
-                            sleep 15
-                            
-                            /home/agent2/.local/bin/pytest --junitxml=result-rest.xml test/rest
-                        '''
-                      }
-                      stash name:'rest-res', includes:'result-rest.xml'
-                    }    
-                }                
-                
-            }
-        }
-
-        stage('Results') {
+        stage('Unit Tests') {
             steps {
-                unstash name:'unit-res'
-                unstash name:'rest-res'
-                junit 'result*.xml' 
+                unstash 'code'
+                sh '''
+                    pytest --junitxml=unit-results.xml test/unit/
+                '''
+                stash name:'unit-res', includes:'unit-results.xml'
             }
         }
-     
+
+        stage('Coverage') {
+            steps {
+                unstash 'code'
+                sh '''
+                    coverage run --branch --source=app --omit=app\__init__.py,app\api.py -m pytest test\unit
+                    coverage xml
+                '''
+                catchError(buildResult 'UNSTABLE', stageResult: 'FAILURE'){
+                    cobertura coberturaReportFile: 'coverage.xml', conditionalCoverageTargets: '100,0,80', lineCoverageTargets: '100,0,90'
+                }
+                
+                stash name:'coverage-res', includes:'coverage.xml'
+            }
+        }
     }
-}
