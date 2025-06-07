@@ -24,7 +24,7 @@ pipeline {
                 unstash 'code'
                 sh '''
                     export PYTHONPATH=$PYTHONPATH:$(pwd)
-                    pytest --junitxml=unit-results.xml test/unit/
+                    python -m pytest --junitxml=unit-results.xml test/unit/
                 '''
                 stash name:'unit-res', includes:'unit-results.xml'
             }
@@ -97,7 +97,7 @@ pipeline {
                             echo "Esperando a que Flask esté listo en http://localhost:5000/ ..."
                             timeout 120 bash -c 'until curl -sf http://localhost:5000/ > /dev/null; do sleep 2; done'
                             sleep 2  # Opcional: da un pequeño margen por si tarda
-                            
+
                             jmeter -n -t ./test/jmeter/flask.jmx -l flask.jtl
                             sleep 10
                         '''
