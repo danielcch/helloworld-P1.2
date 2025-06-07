@@ -6,7 +6,7 @@ pipeline {
     stages {
         stage('Get Code') {
             steps {
-                git 'https://github.com/danielcch/helloworld-P1.2.git'
+                checkout scm
                 echo WORKSPACE
                 sh 'ls -la'
                 stash name:'code', includes:'**'
