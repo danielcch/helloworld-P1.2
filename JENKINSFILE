@@ -21,24 +21,16 @@ pipeline {
 
         stage('Unit Tests') {
             steps {
-                unstash 'code'
                 sh '''
                     export PYTHONPATH=$PYTHONPATH:$(pwd)
                     pytest --junitxml=unit-results.xml test/unit/
                 '''
-                stash name:'unit-res', includes:'unit-results.xml'
+                junit '*results.xml'
             }
         }
 
-        stage ('Results') {
-            steps {
-                junit '*results.xml'
-            }
-        }    
-
         stage('Coverage') {
             steps {
-                unstash 'code'
                 sh '''
                     export PYTHONPATH=$PYTHONPATH:$(pwd)
                     python3 -m coverage run --branch --source=app --omit=app/__init__.py,app/api.py -m pytest test/unit
@@ -47,8 +39,6 @@ pipeline {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE'){
                     cobertura coberturaReportFile: 'coverage.xml', conditionalCoverageTargets: '100,0,80', lineCoverageTargets: '100,0,90'
                 }
-                
-                stash name:'coverage-res', includes:'coverage.xml'
             }
         }
 
