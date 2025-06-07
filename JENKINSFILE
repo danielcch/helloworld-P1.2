@@ -16,7 +16,6 @@ pipeline {
                 checkout scm
                 echo WORKSPACE
                 sh 'ls -la'
-                stash name:'code', includes:'**'
             }
         }
     
