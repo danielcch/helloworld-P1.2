@@ -30,6 +30,12 @@ pipeline {
             }
         }
 
+        stage ('Results') {
+            steps {
+                junit 'result*.xml'
+            }
+        }    
+
         stage('Coverage') {
             steps {
                 unstash 'code'
