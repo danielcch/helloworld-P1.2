@@ -82,18 +82,20 @@ pipeline {
                         export PYTHONPATH=.
                         export FLASK_APP=app/api.py:api_application
                         PORT_FLASK=5000
+
                         flask run --port=$PORT_FLASK --host=0.0.0.0 --with-threads &
                         FLASK_PID=$!
                         trap "kill $FLASK_PID || true" EXIT
 
                         echo "Esperando a que Flask esté listo en http://localhost:$PORT_FLASK/ ..."
                         timeout 120 bash -c 'until curl -sf http://localhost:$PORT_FLASK/ > /dev/null; do sleep 2; done'
-                        sleep 2  # Margen extra opcional, por si tarda en estar "realmente" operativo
+                        sleep 2
 
                         export BASE_URL_ENV=http://localhost:$PORT_FLASK
                         jmeter -n -t ./test/jmeter/flask.jmx -l flask.jtl
 
                         kill $FLASK_PID || true
+
                     '''
                     perfReport sourceDataFiles: 'flask.jtl'
                 }
