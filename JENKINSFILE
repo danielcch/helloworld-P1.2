@@ -89,7 +89,7 @@ pipeline {
                             sleep 2  # Opcional: da un pequeño margen por si tarda
 
                             jmeter -n -t ./test/jmeter/flask.jmx -l flask.jtl
-                            sleep 10
+                            sleep 5
                         '''
                 }
                     perfReport sourceDataFiles: 'flask.jtl'
