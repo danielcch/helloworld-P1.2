@@ -32,7 +32,7 @@ pipeline {
 
         stage ('Results') {
             steps {
-                junit 'result*.xml'
+                junit '*result*.xml'
             }
         }    
 
