@@ -97,7 +97,7 @@ pipeline {
                             sleep 5
                         '''
                 }
-                    perfReport sourceDataFiles: 'flask.jtl'
+                perfReport sourceDataFiles: 'flask.jtl'
 
             }
         }
