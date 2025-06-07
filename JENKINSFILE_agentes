@@ -5,8 +5,8 @@ pipeline {
 
     stages {
         stage('Get Code') {
+            agent { label 'agente1' }
             steps {
-                agent { label 'agente1' }
                 checkout scm
                 sh 'whoami'
                 sh 'hostname'
