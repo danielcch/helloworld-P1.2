@@ -89,7 +89,7 @@ pipeline {
                              
                                 timeout 120 bash -c "until curl -s http://localhost:5000> /dev/null; do sleep 2; done"
                                 
-                                export BASE_URL_ENV=http://localhost:$PORT_FLASK
+                                export BASE_URL_ENV=http://localhost:5000
 
                                 jmeter -n -t ./test/jmeter/flask.jmx -l flask.jtl
                             '''
