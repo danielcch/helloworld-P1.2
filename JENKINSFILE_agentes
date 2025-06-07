@@ -86,29 +86,25 @@ pipeline {
                             export PYTHONPATH=.
                             export FLASK_APP=app/api.py:api_application
                             PORT_FLASK=5000
-                            PORT_WIREMOCK=$(python3 -c "import socket; s=socket.socket(); s.bind(('',0)); print(s.getsockname()[1]); s.close()")
                             
                             # Inicia Flask
                             flask run --port=$PORT_FLASK &
                             FLASK_PID=$!
-                            # Inicia Wiremock
-                            java -jar /tools/wiremock/wiremock-standalone-2.27.2.jar --port $PORT_WIREMOCK --root-dir /tools/wiremock/ -v &
-                            WIREMOCK_PID=$!
+
                             # Limpieza automática al salir
-                            trap 'kill $FLASK_PID $WIREMOCK_PID || true' EXIT
+                            trap 'kill $FLASK_PID || true' EXIT
 
                             # Espera a que estén listos
                             timeout 120 bash -c "until curl -s http://localhost:$PORT_FLASK > /dev/null; do sleep 2; done"
-                            timeout 120 bash -c "until curl -s http://localhost:$PORT_WIREMOCK > /dev/null; do sleep 2; done"
 
                             export BASE_URL_ENV=http://localhost:$PORT_FLASK
-                            export BASE_URL_MOCK_ENV=http://localhost:$PORT_WIREMOCK
 
                             # Ejecuta JMeter
                             jmeter -n -t ./test/jmeter/flask.jmx -l flask.jtl
                         '''
                     }
                     perfReport sourceDataFiles: 'flask.jtl'
+
             }
         }
     }
