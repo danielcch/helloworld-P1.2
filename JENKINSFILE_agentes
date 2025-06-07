@@ -70,7 +70,7 @@ pipeline {
                 '''
                 recordIssues tools: [pyLint(name: 'Bandit', pattern: 'bandit.out')], 
                 qualityGates: [[threshold:1, type: 'TOTAL', unstable: true], 
-                [threshold: 2, type: 'TOTAL', unstable: false]]
+                [threshold: 1, type: 'TOTAL', unstable: false]]
                 
                 
             }
