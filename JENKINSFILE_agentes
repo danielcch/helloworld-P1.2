@@ -66,7 +66,7 @@ pipeline {
         stage('Security') {
             steps{
                 sh '''
-                    python3 -m bandit -r . -f custom -o bandit.out --msg-template "{abspath}:{line}: [{test_id} {msg}]"
+                    python3 -m bandit -r . -f custom -o bandit.out --msg-template "{abspath}:{line}: [{test_id} {msg}]" || true
                 '''
                 recordIssues tools: [pylint(name: 'Bandit', pattern: 'bandit.out')], 
                 qualityGates: [[threshold:1, type: 'TOTAL', unstable: true], 
