@@ -82,7 +82,7 @@ pipeline {
                         export PYTHONPATH=.
                         export FLASK_APP=app/api.py:api_application
                         PORT_FLASK=5000
-                        flask run --port=$PORT_FLASK &
+                        flask run --port=$PORT_FLASK --with-threads &
                         FLASK_PID=$!
                         trap "kill $FLASK_PID || true" EXIT
 
