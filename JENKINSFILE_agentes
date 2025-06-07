@@ -23,6 +23,7 @@ pipeline {
             steps {
                 unstash 'code'
                 sh '''
+                    export PYTHONPATH=$PYTHONPATH:$(pwd)
                     pytest --junitxml=unit-results.xml test/unit/
                 '''
                 stash name:'unit-res', includes:'unit-results.xml'
