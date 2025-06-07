@@ -74,5 +74,15 @@ pipeline {
     
             }
         }
+
+        stage('Performance') {
+            steps {
+                sh '''
+                    jmeter -m -t test/jmeter/flask.jmx -f -l flask.jtl
+                '''
+                perfReport sourceDataFiles: 'flask.jtl'
+
+            }
+        }
     }
 }
