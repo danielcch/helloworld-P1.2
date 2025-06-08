@@ -1,0 +1,141 @@
+pipeline {
+    agent none
+
+    options { skipDefaultCheckout() }
+
+    environment {
+        PYTHONPATH = "${env.PYTHONPATH}:${WORKSPACE}"
+        FLASK_APP = 'app/api.py:api_application'
+        PORT_FLASK = '5000'
+    }
+
+    stages {
+        stage('Get Code') {
+            agent { label 'agente1' }
+            steps {
+                checkout scm
+                sh 'whoami'
+                sh 'hostname'
+                sh 'echo $WORKSPACE'
+                sh 'ls -la'
+                stash name:'code', includes:'**'
+            }
+        }
+        
+        stage('Build') {
+            agent { label 'agente1' }
+            steps {
+                echo 'Eyyy, esto es Python. No hay que compilar nada!!!'
+                sh 'whoami'
+                sh 'hostname'
+                sh 'echo $WORKSPACE'
+            }
+        }
+        stage('Tests') {
+            parallel {
+                stage('Coverage & junit') {
+                    agent { label 'agente3' }
+                    steps {
+
+                        unstash 'code'
+                        sh 'whoami'
+                        sh 'hostname'
+                        sh 'echo $WORKSPACE'
+                        sh '''
+                            export PYTHONPATH=$PYTHONPATH:$(pwd)
+                            #python3 -m coverage run --branch --source=app --omit=app/__init__.py,app/api.py -m pytest test/unit
+                            python3 -m coverage run --branch --source=app --omit=app/__init__.py,app/api.py -m pytest --junitxml=unit-results.xml test/unit
+                            python3 -m coverage xml
+
+                        '''
+                        stash name:'coverage', includes:'coverage.xml, unit-results.xml, .coverage'
+                    }
+                }
+
+                stage('Static') {
+                    agent { label 'agente2' }
+                    steps {
+                        unstash 'code'
+                        sh '''
+                            python3 -m flake8 --exit-zero --format=pylint app > flake8.out
+                        '''
+                        stash name:'flake8', includes:'flake8.out'
+                    }
+                }
+
+                stage('Security') {
+                    agent { label 'agente3' }
+                    steps{
+                        unstash 'code'
+                        sh '''
+                            python3 -m bandit -r . -f custom -o bandit.out --msg-template "{abspath}:{line}: {severity}: {test_id}: {msg}" || true
+                        '''
+                        stash name:'bandit', includes:'bandit.out'
+                    }
+                }
+
+                stage('Performance') {
+                    agent { label 'agente1' }
+                    steps {
+                        unstash 'code'
+                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                            sh '''
+                                    echo "Usuario: $(whoami)"
+                                    echo "Host: $(hostname)"
+                                    echo "Workspace: $WORKSPACE"
+
+                                    export PYTHONPATH=${PYTHONPATH}
+                                    export FLASK_APP=${FLASK_APP}
+                                    PORT_FLASK=${PORT_FLASK}
+                                    
+                                    # Inicia Flask
+
+                                    flask run --port=${PORT_FLASK} &
+
+                                    FLASK_PID=$!
+                                    trap "kill $FLASK_PID || true" EXIT
+
+                                    echo "Esperando a que Flask esté listo en http://127.0.0.1:${PORT_FLASK}/ ..."
+                                    timeout 120 bash -c 'until curl -sf http://127.0.0.1:${PORT_FLASK}/ > /dev/null; do sleep 2; done'
+                                    sleep 2  # Opcional: da un pequeño margen por si tarda
+
+                                    jmeter -n -t ./test/jmeter/flask.jmx -l flask.jtl
+                                    sleep 5
+                                '''
+                        }
+                        stash name:'jmeter', includes:'flask.jtl'
+                    }
+                }
+            }
+        }
+        
+        stage ('Results') {
+            agent { label 'agente1' }
+            steps {
+                unstash 'coverage'
+                unstash 'flake8'
+                unstash 'bandit'
+                unstash 'jmeter'
+                
+                // todos los resultados:
+                junit 'unit-results.xml'
+
+                cobertura coberturaReportFile: 'coverage.xml', conditionalCoverageTargets: '100,0,80', lineCoverageTargets: '100,0,90'
+                
+                recordIssues tools: [flake8(name: 'Flake8', pattern: 'flake8.out')], 
+                qualityGates: [[threshold:10, type: 'TOTAL', unstable: true], 
+                [threshold: 11, type: 'TOTAL', unstable: false]]
+                
+
+                recordIssues tools: [pyLint(name: 'Bandit', pattern: 'bandit.out')], 
+                qualityGates: [[threshold:1, type: 'TOTAL', unstable: true], 
+                [threshold: 2, type: 'TOTAL', unstable: false]]
+                
+                perfReport sourceDataFiles: 'flask.jtl'
+
+                sh 'python3 -m coverage report'
+            }
+        
+        }
+    }
+}
