@@ -147,7 +147,7 @@ pipeline {
                 
                 perfReport sourceDataFiles: 'flask.jtl'
 
-                sh 'coverage report'
+                sh 'python3 -m coverage report'
             }
         
         }
