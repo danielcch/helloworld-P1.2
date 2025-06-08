@@ -30,11 +30,11 @@ class Calculator:
         return x ** y
 
     def check_types(self, x, y):
-        if not isinstance(x, (int, float)) or                                                not isinstance(y, (int, float)):
+        if not isinstance(x, (int, float)) or not isinstance(y, (int, float)):
             raise TypeError("Parameters must be numbers")
 
 
-if __name__ == "__main__":  # pragma: no cover
+if __name__ == "__main__": 
     calc = Calculator()
     result = calc.add(2, 2)
     print(result)
