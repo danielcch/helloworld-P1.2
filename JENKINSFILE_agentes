@@ -61,7 +61,7 @@ pipeline {
                             python3 -m coverage run --branch --source=app --omit=app/__init__.py,app/api.py -m pytest test/unit
                             python3 -m coverage xml
                         '''
-                        stash name:'coverage', includes:'coverage.xml'
+                        stash name:'coverage', includes:'coverage.xml, .coverage'
                     }
                 }
 
