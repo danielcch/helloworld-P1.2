@@ -68,5 +68,5 @@ class TestCalculate(unittest.TestCase):
         with pytest.raises(TypeError, match="Division by zero is not possible"):
             calc.divide(4, 0)
 
-if __name__ == "__main__":  # pragma: no cover
+if __name__ == "__main__":
     unittest.main()
