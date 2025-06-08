@@ -146,6 +146,8 @@ pipeline {
                 [threshold: 2, type: 'TOTAL', unstable: false]]
                 
                 perfReport sourceDataFiles: 'flask.jtl'
+
+                sh 'python3 -m coverage report'
             }
         
         }
