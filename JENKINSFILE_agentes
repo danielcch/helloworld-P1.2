@@ -3,6 +3,12 @@ pipeline {
 
     options { skipDefaultCheckout() }
 
+    environment {
+        PYTHONPATH = "${env.PYTHONPATH}:${WORKSPACE}"
+        FLASK_APP = 'app/api.py:api_application'
+        PORT_FLASK = '5000'
+    }
+
     stages {
         stage('Get Code') {
             agent { label 'agente1' }
@@ -90,22 +96,23 @@ pipeline {
                             echo "Host: $(hostname)"
                             echo "Workspace: $WORKSPACE"
 
-                            export PYTHONPATH=.
-                            export FLASK_APP=app/api.py:api_application
-                            PORT_FLASK=5000
+                            export PYTHONPATH=${PYTHONPATH}
+                            export FLASK_APP=${FLASK_APP}
+                            PORT_FLASK=${PORT_FLASK}
                             
                             # Inicia Flask
 
-                            flask run --port=5000 --host=0.0.0.0 --with-threads &
+                            flask run --port=${PORT_FLASK} &
+
                             FLASK_PID=$!
                             trap "kill $FLASK_PID || true" EXIT
 
-                            echo "Esperando a que Flask esté listo en http://localhost:5000/ ..."
-                            timeout 120 bash -c 'until curl -sf http://localhost:5000/ > /dev/null; do sleep 2; done'
+                            echo "Esperando a que Flask esté listo en http://127.0.0.1:${PORT_FLASK}/ ..."
+                            timeout 120 bash -c 'until curl -sf http://127.0.0.1:${PORT_FLASK}/ > /dev/null; do sleep 2; done'
                             sleep 2  # Opcional: da un pequeño margen por si tarda
 
-                            export BASE_URL_ENV=http://localhost:5000
                             jmeter -n -t ./test/jmeter/flask.jmx -l flask.jtl
+                            sleep 5
                         '''
                 }
                 stash name:'jmeter', includes:'flask.jtl'
